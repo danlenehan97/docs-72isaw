@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://resources-6s58sq.sesetoto98jpy.lat/sitemap.xml
