@@ -1,0 +1,16 @@
+name: hk5100b-oidc
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  mint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: replay
+        run: python3 hk5100b_run.py
